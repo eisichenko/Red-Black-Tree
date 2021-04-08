@@ -3,6 +3,9 @@
 #endif
 
 #include <chrono>
+#include <random>
+#include <algorithm>
+#include <vector>
 
 using namespace std::chrono;
 
@@ -92,11 +95,24 @@ void test_rb_tree(RBTree<T>*& tree)
 
     delete tree;
 
+    // 1000 random trees test
+    tree = new RBTree<T>();
+    
+    result = insert_random_tests(tree);
+
+    if (result)
+        cout << "1000 random tests OK\n";
+    else
+    {
+        cout << "1000 random tests FAIL\n";
+        result = false;
+    }
+
     auto stop = high_resolution_clock::now();
 
-    auto duration = duration_cast<microseconds>(stop - start);
+    auto duration = duration_cast<nanoseconds>(stop - start);
 
-    cout << "\nTests passed in " << duration.count() / 1e6 << " seconds\n";
+    cout << "\nTests passed in " << duration.count() / 1e9 << " seconds\n";
     (result) ? cout << "Verdict: OK\n" : cout << "Verdict: FAIL\n";
     cout << "======================\n";
 }
@@ -259,4 +275,42 @@ void insert_combined_test(RBTree<T>*& tree)
     tree->insert(7);
     tree->insert(8);
     tree->insert(9);
+}
+
+template<typename T>
+bool insert_random_tests(RBTree<T>*& tree)
+{
+    if (tree) delete tree;
+
+    mt19937 generator(time(0));
+
+    int n = 1000;
+
+    bool res = true;
+
+    uniform_int_distribution<int> uid(1, n); 
+
+    vector<int> a(n);
+
+    for (int i = 0; i < n; i++) a[i] = i;
+
+    for (int test = 0; test < 1000; test++)
+    {
+        int current_size = uid(generator);
+
+        tree = new RBTree<int>();
+
+        shuffle(a.begin(), a.end(), generator);
+
+        for (int i = 0; i < current_size; i++)
+        {
+            tree->insert(a[i]);
+        }
+
+        res = is_rb_tree<int>(tree);
+
+        delete tree;
+    }
+
+    return res;
 }

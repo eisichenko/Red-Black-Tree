@@ -50,15 +50,19 @@ private:
     void balance(Node<T>*&);
     void ll_case(Node<T>*&, Node<T>*&);
     void rr_case(Node<T>*&, Node<T>*&);
+    bool BST_find(Node<T>*&, T);
 public:
     Node<T>* root;
+    int size;
 
     RBTree()
     {
         root = NULL;
+        size = 0;
     }
 
     void insert(T);
+    bool find(T);
     void print();
 };
 
@@ -186,12 +190,34 @@ void RBTree<T>::rr_case(Node<T>*& father, Node<T>*& grandfather)
 }
 
 template<typename T>
+bool RBTree<T>::find(T data)
+{
+    return BST_find(root, data);
+}
+
+template<typename T>
+bool RBTree<T>::BST_find(Node<T>*& current_node, T data)
+{
+    if (!current_node) return false;
+
+    if (data > current_node->data)
+        return BST_find(current_node->right, data);
+    else if (data < current_node->data)
+        return BST_find(current_node->left, data);
+
+    return true;
+}
+
+template<typename T>
 void RBTree<T>::insert(T data)
 {
     Node<T>* current_node = BST_insert(root, data, NULL);
 
     if (current_node)
+    {
         balance(current_node);
+        size++;
+    }
 }
 
 template <typename T>

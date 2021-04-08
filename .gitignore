@@ -1,4 +1,8 @@
 .vscode
+main
+rb_tree
+test
+MyTimer
 
 # Prerequisites
 *.d
