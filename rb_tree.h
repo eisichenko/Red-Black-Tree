@@ -1,12 +1,8 @@
 #include <iostream>
+#include <stack>
+#include "Node.h"
 
 using namespace std;
-
-enum Color
-{
-    RED,
-    BLACK
-};
 
 template<typename T>
 void print_white(T data)
@@ -19,27 +15,6 @@ void print_red(T data)
 {
     cout << ("\033[1;31m" + to_string(data) + "\033[0m");
 }
-
-template<typename T>
-class Node
-{
-public:
-    T data;
-    Color color;
-    
-    Node<T>* left;
-    Node<T>* right;
-    Node<T>* parent;
-
-    Node(T data)
-    {
-        this->data = data;
-        left = NULL;
-        right = NULL;
-        parent = NULL;
-        color = RED;
-    }
-};
 
 template <typename T>
 class RBTree
@@ -61,10 +36,162 @@ public:
         size = 0;
     }
 
+    class NodeIterator
+    {
+    private:
+        Node<T>* cur; 
+    public:
+        NodeIterator(Node<T>* cur)
+        {
+            this->cur = cur;
+        }
+
+        NodeIterator(NodeIterator* it)
+        {
+            this->cur = it->cur;
+        }
+
+        NodeIterator()
+        {
+            this->cur = NULL;
+        }
+
+        NodeIterator operator++ ()
+        {
+            if (!cur) return NodeIterator();
+
+            if (cur->right)
+            {
+                cur = cur->right;
+                
+                while (cur->left)
+                    cur = cur->left;
+            }
+            else if (cur)
+            {
+                Node<T>* parent = cur->parent;
+
+                while (parent && cur == parent->right)
+                {
+                    cur = parent;
+                    parent = parent->parent;
+                }
+
+                cur = parent;
+            }
+            
+            return NodeIterator(this);
+        }
+
+        NodeIterator operator++ (int)
+        {
+            return operator++();
+        }
+
+        NodeIterator operator-- ()
+        {
+            if (!cur) return NodeIterator();
+
+            if (cur->left)
+            {
+                cur = cur->left;
+                
+                while (cur->right)
+                    cur = cur->right;
+            }
+            else if (cur)
+            {
+                Node<T>* parent = cur->parent;
+
+                while (parent && cur == parent->left)
+                {
+                    cur = parent;
+                    parent = parent->parent;
+                }
+
+                cur = parent;
+            }
+
+            return NodeIterator(this);
+        }
+
+        NodeIterator operator-- (int)
+        {
+            return operator--();
+        }
+
+        NodeIterator operator+ (int n)
+        {
+            for (int i = 0; i < n && cur; i++)
+                operator++();
+
+            return NodeIterator(this);
+        }
+
+        NodeIterator operator- (int n)
+        {
+            for (int i = 0; i < n && cur; i++)
+                operator--();
+
+            return NodeIterator(this);
+        }
+
+        NodeIterator operator+= (int n)
+        {
+            return operator+(n);
+        }
+
+        NodeIterator operator-= (int n)
+        {
+            return operator-(n);
+        }
+
+        bool operator== (const NodeIterator& it)
+        {
+            return it.cur == cur;
+        }
+
+        bool operator!= (const NodeIterator& it)
+        {
+            return it.cur != cur;
+        }
+
+        T operator* ()
+        {
+            if (cur) 
+                return cur->data;
+            else 
+                throw runtime_error("access to null node");
+        }
+    };
+
     void insert(T);
     bool find(T);
     void print();
+    
+    NodeIterator begin()
+    {
+        Node<T>* cur = root;
+
+        while (cur->left)
+            cur = cur->left;
+
+        return NodeIterator(cur);
+    }
+
+    NodeIterator begin(Node<T>* node)
+    {
+        return NodeIterator(node);
+    }
+
+    NodeIterator end()
+    {
+        return NodeIterator();
+    }
 };
+
+
+
 
 template<typename T>
 void RBTree<T>::balance(Node<T>*& current_node)

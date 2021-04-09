@@ -3,6 +3,10 @@ main
 rb_tree
 test
 MyTimer
+MyArray
+Node
+TreeIterator
+NodeIterator
 
 # Prerequisites
 *.d
