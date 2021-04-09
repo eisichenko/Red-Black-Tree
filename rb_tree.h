@@ -41,6 +41,12 @@ public:
     private:
         Node<T>* cur; 
     public:
+
+        NodeIterator()
+        {
+            this->cur = NULL;
+        }
+
         NodeIterator(Node<T>* cur)
         {
             this->cur = cur;
@@ -51,14 +57,9 @@ public:
             this->cur = it->cur;
         }
 
-        NodeIterator()
+        NodeIterator* operator++ ()
         {
-            this->cur = NULL;
-        }
-
-        NodeIterator operator++ ()
-        {
-            if (!cur) return NodeIterator();
+            if (!cur) return NULL;
 
             if (cur->right)
             {
@@ -80,17 +81,17 @@ public:
                 cur = parent;
             }
             
-            return NodeIterator(this);
+            return this;
         }
 
-        NodeIterator operator++ (int)
+        NodeIterator* operator++ (int)
         {
             return operator++();
         }
 
-        NodeIterator operator-- ()
+        NodeIterator* operator-- ()
         {
-            if (!cur) return NodeIterator();
+            if (!cur) return NULL;
 
             if (cur->left)
             {
@@ -112,36 +113,36 @@ public:
                 cur = parent;
             }
 
-            return NodeIterator(this);
+            return this;
         }
 
-        NodeIterator operator-- (int)
+        NodeIterator* operator-- (int)
         {
             return operator--();
         }
 
-        NodeIterator operator+ (int n)
+        NodeIterator* operator+ (int n)
         {
             for (int i = 0; i < n && cur; i++)
                 operator++();
 
-            return NodeIterator(this);
+            return this;
         }
 
-        NodeIterator operator- (int n)
+        NodeIterator* operator- (int n)
         {
             for (int i = 0; i < n && cur; i++)
                 operator--();
 
-            return NodeIterator(this);
+            return this;
         }
 
-        NodeIterator operator+= (int n)
+        NodeIterator* operator+= (int n)
         {
             return operator+(n);
         }
 
-        NodeIterator operator-= (int n)
+        NodeIterator* operator-= (int n)
         {
             return operator-(n);
         }
@@ -165,6 +166,8 @@ public:
         }
     };
 
+    NodeIterator end_element = NodeIterator();
+
     void insert(T);
     bool find(T);
     void print();
@@ -184,9 +187,9 @@ public:
         return NodeIterator(node);
     }
 
-    NodeIterator end()
+    NodeIterator& end()
     {
-        return NodeIterator();
+        return end_element;
     }
 };
 
