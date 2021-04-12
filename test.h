@@ -290,6 +290,11 @@ bool is_rb_tree(RBTree<T>*& tree)
     bool result = true;
     bool cur_result = true;
 
+    if (!tree->root)
+    {
+        return true;
+    }
+
     if (tree->root->color != BLACK)
     {
         cout << "Red root!\n";
@@ -385,6 +390,7 @@ void parent_nodes(Node<T>*& current_node, Node<T>* parent, bool& result)
     if (current_node->parent && current_node->parent != parent)
     {
         result = false;
+        cout << "Current: " << current_node->data << " Parent: " << parent->data << " Current->parent: " << current_node->parent->data << endl;
         return;
     }
 
