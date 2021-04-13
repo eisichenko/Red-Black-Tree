@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stack>
 #include "Node.h"
 
 using namespace std;
@@ -22,7 +21,7 @@ class RBTree
 private:
     void print_right_inorder(Node<T>*&, int);
     void balance(Node<T>*&);
-    void balance_remove(Node<T>*&, bool);
+    void fix_double_black(Node<T>*&, bool);
     void ll_case(Node<T>*&, Node<T>*&);
     void rr_case(Node<T>*&, Node<T>*&);
     Node<T>* BST_find(Node<T>*&, T);
@@ -199,6 +198,18 @@ public:
 };
 
 template<typename T>
+void RBTree<T>::remove(T data)
+{
+    Node<T>* node_to_delete = BST_find(root, data);
+
+    if (!node_to_delete) return;
+
+    remove(node_to_delete);
+
+    size--;
+}
+
+template<typename T>
 void RBTree<T>::remove(Node<T>*& node_to_delete) 
 {
     if (!node_to_delete) return;
@@ -222,6 +233,8 @@ void RBTree<T>::remove(Node<T>*& node_to_delete)
         node_to_delete->data = t;
 
         remove(min);
+
+        return;
     }
 
     int childs_num = 0;
@@ -271,12 +284,12 @@ void RBTree<T>::remove(Node<T>*& node_to_delete)
     {
         Node<T>* parent = node_to_delete->parent;
 
-        bool deleted_left = false;
+        bool double_black_from_left = false;
 
         if (node_to_delete == parent->left)
         {
             parent->left = NULL;
-            deleted_left = true;
+            double_black_from_left = true;
         }
         else
         {
@@ -285,157 +298,89 @@ void RBTree<T>::remove(Node<T>*& node_to_delete)
 
         delete node_to_delete;
 
-        balance_remove(parent, deleted_left);
+        fix_double_black(parent, double_black_from_left);
     }
 }
 
 template<typename T>
-void RBTree<T>::balance_remove(Node<T>*& parent, bool deleted_left)
+void RBTree<T>::fix_double_black(Node<T>*& parent, bool double_black_from_left)
 {
-    Node<T>* child = deleted_left ? parent->right : parent->left;
+    if (!parent) return;
 
-    // 1
-    // red parent, black child and black great child
-    if (parent->color == RED && child && child->color == BLACK
-        && (!child->left || child->left->color == BLACK) 
-        && (!child->right || child->right->color == BLACK))
+    Node<T>* sibling = double_black_from_left ? parent->right : parent->left;
+
+    bool sibling_is_left_child = !double_black_from_left;
+
+    // sibling is black
+    if (sibling->color == BLACK)
     {
+        // LL case, s - left child, r - left or both
+        if (sibling_is_left_child
+            && ((sibling->left && sibling->left->color == RED)
+            || (sibling->left && sibling->right && sibling->left->color == RED
+                && sibling->right->color == RED)))
+        {
+            sibling->left->color = sibling->color;
+            sibling->color = parent->color;
+            
+            right_rotate(parent);
+        }
+        // RR case, s - rigth child, r - right or both
+        else if (!sibling_is_left_child
+            && ((sibling->right && sibling->right->color == RED)
+            || (sibling->left && sibling->right && sibling->left->color == RED
+                && sibling->right->color == RED)))
+        {
+            sibling->right->color = sibling->color;
+            sibling->color = parent->color;
+
+            left_rotate(parent);
+        }
+        // LR case, s - left, r - right
+        else if (sibling_is_left_child
+            && sibling->right && sibling->right->color == RED)
+        {
+            sibling->right->color = parent->color;
+
+            left_rotate(sibling);
+            right_rotate(parent);
+        }
+        // RL case, s - right, r - left
+        else if (!sibling_is_left_child
+            && sibling->left && sibling->left->color == RED)
+        {
+            sibling->left->color = parent->color;
+
+            right_rotate(sibling);
+            left_rotate(parent);
+        }
+        // sibling is black and its both children are black
+        else if ((!sibling->left || sibling->left->color == BLACK)
+            && (!sibling->right || sibling->right->color == BLACK))
+        {
+            sibling->color = RED;
+            if (parent->color == RED)
+                parent->color = BLACK;
+            else
+                fix_double_black(parent->parent, parent->parent ? parent->parent->left == parent : false);
+            return;
+        }
+
         parent->color = BLACK;
-        child->color = RED;
-        cout << "Method 1\n";
-        return;
     }
-
-    // 2
-    // red parent, black child, red left great child
-    if (!deleted_left && parent->color == RED && child
-        && child->color == BLACK && child->left && child->left->color == RED)
+    // sibling red
+    else
     {
-        parent->color = BLACK;
-        child->color = RED;
-        child->left->color = BLACK;
-        right_rotate(parent);
-        cout << "Method 2\n";
-        return;
+        parent->color = RED;
+        sibling->color = BLACK;
+
+        if (sibling_is_left_child)
+            right_rotate(parent);
+        else
+            left_rotate(parent);
+
+        fix_double_black(parent, double_black_from_left);
     }
-
-    // mirror to the right
-    if (deleted_left && parent->color == RED && child &&
-        child->color == BLACK && child->right && child->right->color == RED)
-    {
-        parent->color = BLACK;
-        child->color = RED;
-        child->right->color = BLACK;
-        left_rotate(parent);
-        cout << "Method 2 mirror\n";
-        return;
-    }
-
-    // 3
-    // black parent, red child, black childs of great child
-    if (!deleted_left && parent->color == BLACK && child
-        && child->color == RED && child->right
-        && (!child->right->left || child->right->left->color == BLACK)
-        && (!child->right->right || child->right->right->color == BLACK))
-    {
-        child->color = BLACK;
-        child->right->color = RED;
-        right_rotate(parent);
-        cout << "Method 3\n";
-        return;
-    }
-
-    // mirror
-    if (deleted_left && parent->color == BLACK && child
-        && child->color == RED && child->left
-        && (!child->left->left || child->left->left->color == BLACK)
-        && (!child->left->right || child->left->right->color == BLACK))
-    {
-        child->color = BLACK;
-        child->left->color = RED;
-        left_rotate(parent);
-        cout << "Method 3m\n";
-        return;
-    }
-
-    // 4
-    // black parent, red child, right great child has left red child
-    if (!deleted_left && parent->color == BLACK && child
-        && child->color == RED && child->right && child->right->left
-        && child->right->left->color == RED)
-    {
-        child->right->left->color = BLACK;
-        left_rotate(child);
-        right_rotate(parent);
-        cout << "Method 4\n";
-        return;
-    }
-
-    // mirror
-    if (deleted_left && parent->color == BLACK && child
-        && child->color == RED && child->left && child->left->right
-        && child->left->right->color == RED)
-    {
-        child->left->right->color = BLACK;
-        right_rotate(child);
-        left_rotate(parent);
-        cout << "Method 4m\n";
-        return;
-    }
-
-    // 5
-    // black parent, black child, red right great child
-    if (!deleted_left && parent->color == BLACK && child
-        && child->color == BLACK && child->right
-        && child->right->color == RED)
-    {
-        child->right->color = BLACK;
-        left_rotate(child);
-        right_rotate(parent);
-        cout << "Method 5\n";
-        return;
-    }
-
-    // mirror
-    if (deleted_left && parent->color == BLACK && child
-        && child->color == BLACK && child->left
-        && child->left->color == RED)
-    {
-        child->left->color = BLACK;
-        right_rotate(child);
-        left_rotate(parent);
-        cout << "Method 5m\n";
-        return;
-    }
-
-    // 6
-    // black parent, black child, black great childs
-    if (!deleted_left && parent->color == BLACK && child
-        && child->color == BLACK
-        && (!child->right || child->right->color == BLACK)
-        && (!child->left || child->left->color == BLACK))
-    {
-        child->color = RED;
-        
-        if (!parent->parent) return;
-
-        bool from_left = (parent->parent->left == parent);
-
-        balance_remove(parent->parent, from_left);
-        cout << "Method 6\n";
-
-        return;
-    }
-}
-
-template<typename T>
-void RBTree<T>::remove(T data)
-{
-    Node<T>* node_to_delete = BST_find(root, data);
-
-    if (!node_to_delete) return;
-
-    remove(node_to_delete);
 }
 
 template<typename T>

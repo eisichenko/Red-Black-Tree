@@ -11,13 +11,15 @@
 using namespace std::chrono;
 
 template<typename T>
-void test_rb_tree()
+bool test_rb_tree()
 {
+    MyTimer timer;
+
     bool result = true;
 
     cout << "======================\n";
 
-    auto start = high_resolution_clock::now();
+    timer.start();
 
     // LL test
     RBTree<T>* tree = new RBTree<T>();
@@ -94,26 +96,65 @@ void test_rb_tree()
 
     delete tree;
 
-    // 1000 random trees test
+    // 1000 random insert tests
     tree = new RBTree<T>();
     
-    result = insert_random_tests(tree);
+    bool cur_result = insert_random_tests(tree);
 
-    if (result)
-        cout << "1000 random tests OK\n";
+    if (cur_result)
+        cout << "1000 random insert tests OK\n";
     else
     {
-        cout << "1000 random tests FAIL\n";
+        cout << "1000 random insert tests FAIL\n";
         result = false;
     }
 
-    auto stop = high_resolution_clock::now();
+    // 100 random small delete tests
+    tree = new RBTree<T>();
+    
+    cur_result = small_delete_random_tests(tree);
 
-    auto duration = duration_cast<nanoseconds>(stop - start);
+    if (cur_result)
+        cout << "100 random small tree delete tests OK\n";
+    else
+    {
+        cout << "100 random small tree delete tests FAIL\n";
+        result = false;
+    }
 
-    cout << "\nTests passed in " << duration.count() / 1e9 << " seconds\n";
+    // 100 random medium delete tests
+    tree = new RBTree<T>();
+    
+    cur_result = medium_delete_random_tests(tree);
+
+    if (cur_result)
+        cout << "100 random medium tree delete tests OK\n";
+    else
+    {
+        cout << "100 random medium tree delete tests FAIL\n";
+        result = false;
+    }
+
+    // 10 random big delete tests
+    tree = new RBTree<T>();
+    
+    cur_result = big_delete_random_tests(tree);
+
+    if (cur_result)
+        cout << "10 random big tree delete tests OK\n";
+    else
+    {
+        cout << "10 random big tree delete tests FAIL\n";
+        result = false;
+    }
+
+    timer.stop();
+
+    cout << "\nTests was running " << timer.get_time() << " seconds\n";
     (result) ? cout << "Verdict: OK\n" : cout << "Verdict: FAIL\n";
-    cout << "======================\n";
+    cout << "======================\n\n";
+
+    return result;
 }
 
 void test_finding(int n)
@@ -483,6 +524,160 @@ bool insert_random_tests(RBTree<T>*& tree)
         res = is_rb_tree<int>(tree);
 
         delete tree;
+    }
+
+    return res;
+}
+
+template<typename T>
+bool small_delete_random_tests(RBTree<T>*& tree)
+{
+    if (tree) delete tree;
+
+    mt19937 generator(time(0));
+
+    int max_tree_size = 10;
+    int vector_size = 100;
+    int test_number = 100;
+
+    bool res = true;
+
+    uniform_int_distribution<int> uid(1, max_tree_size); 
+
+    vector<int> a(vector_size);
+
+    for (int i = 0; i < vector_size; i++) a[i] = i;
+
+    for (int test = 0; test < test_number; test++)
+    {
+        int current_size = uid(generator);
+
+        tree = new RBTree<int>();
+
+        shuffle(a.begin(), a.end(), generator);
+
+        for (int i = 0; i < current_size; i++)
+        {
+            tree->insert(a[i]);
+        }
+
+        res = is_rb_tree<int>(tree);
+
+        for (int i = 0; i < current_size && res; i++)
+        {
+            tree->remove(a[i]);
+            
+            res = is_rb_tree<int>(tree);
+        }
+
+        if (tree->size) res = false;
+
+        delete tree;
+
+        if (!res) break;
+    }
+
+    return res;
+}
+
+template<typename T>
+bool medium_delete_random_tests(RBTree<T>*& tree)
+{
+    if (tree) delete tree;
+
+    mt19937 generator(time(0));
+
+    int max_tree_size = 100;
+    int vector_size = 10000;
+    int test_number = 100;
+
+    bool res = true;
+
+    uniform_int_distribution<int> uid(1, max_tree_size); 
+
+    vector<int> a(vector_size);
+
+    for (int i = 0; i < vector_size; i++) a[i] = i;
+
+    for (int test = 0; test < test_number; test++)
+    {
+        int current_size = uid(generator);
+
+        tree = new RBTree<int>();
+
+        shuffle(a.begin(), a.end(), generator);
+
+        for (int i = 0; i < current_size; i++)
+        {
+            tree->insert(a[i]);
+        }
+
+        res = is_rb_tree<int>(tree);
+
+        for (int i = 0; i < current_size && res; i++)
+        {
+            tree->remove(a[i]);
+            
+            res = is_rb_tree<int>(tree);
+        }
+
+        if (tree->size) res = false;
+
+        delete tree;
+
+        if (!res) break;
+    }
+
+    return res;
+}
+
+template<typename T>
+bool big_delete_random_tests(RBTree<T>*& tree)
+{
+    if (tree) delete tree;
+
+    mt19937 generator(time(0));
+
+    int max_tree_size = 10000;
+    int vector_size = 100000;
+    int test_number = 10;
+    int nodes_to_delete = 50;
+
+    bool res = true;
+
+    uniform_int_distribution<int> uid(1, max_tree_size); 
+
+    vector<int> a(vector_size);
+
+    for (int i = 0; i < vector_size; i++) a[i] = i;
+
+    for (int test = 0; test < test_number; test++)
+    {
+        int current_size = uid(generator);
+
+        tree = new RBTree<int>();
+
+        shuffle(a.begin(), a.end(), generator);
+
+        for (int i = 0; i < current_size; i++)
+        {
+            tree->insert(a[i]);
+        }
+
+        res = is_rb_tree<int>(tree);
+
+        current_size = min(nodes_to_delete, current_size);
+
+        for (int i = 0; i < current_size && res; i++)
+        {
+            tree->remove(a[i]);
+            
+            res = is_rb_tree<int>(tree);
+        }
+
+        delete tree;
+
+        if (!res) break;
     }
 
     return res;
