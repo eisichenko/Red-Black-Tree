@@ -6,13 +6,11 @@ using namespace std;
 
 int main()
 {
-    test_finding(100000);
+    // test_finding(100000);
 
-    test_iterator(1000000);
+    // test_iterator(100000);
 
-    test_rb_tree<int>();
-
-    return 0;
+    // test_rb_tree<int>();
     
     RBTree<int>* tree = new RBTree<int>();
 

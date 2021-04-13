@@ -22,8 +22,6 @@ private:
     void print_right_inorder(Node<T>*&, int);
     void balance(Node<T>*&);
     void fix_double_black(Node<T>*&, bool);
-    void ll_case(Node<T>*&, Node<T>*&);
-    void rr_case(Node<T>*&, Node<T>*&);
     Node<T>* BST_find(Node<T>*&, T);
     Node<T>* BST_insert(Node<T>*&, T, Node<T>*);
     void remove(Node<T>*&);
@@ -314,58 +312,54 @@ void RBTree<T>::fix_double_black(Node<T>*& parent, bool double_black_from_left)
     // sibling is black
     if (sibling->color == BLACK)
     {
-        // LL case, s - left child, r - left or both
-        if (sibling_is_left_child
-            && ((sibling->left && sibling->left->color == RED)
-            || (sibling->left && sibling->right && sibling->left->color == RED
-                && sibling->right->color == RED)))
-        {
-            sibling->left->color = sibling->color;
-            sibling->color = parent->color;
-            
-            right_rotate(parent);
-        }
-        // RR case, s - rigth child, r - right or both
-        else if (!sibling_is_left_child
-            && ((sibling->right && sibling->right->color == RED)
-            || (sibling->left && sibling->right && sibling->left->color == RED
-                && sibling->right->color == RED)))
-        {
-            sibling->right->color = sibling->color;
-            sibling->color = parent->color;
+        bool left_red = (sibling->left && sibling->left->color == RED);
+        bool right_red = (sibling->right && sibling->right->color == RED);
 
-            left_rotate(parent);
-        }
-        // LR case, s - left, r - right
-        else if (sibling_is_left_child
-            && sibling->right && sibling->right->color == RED)
-        {
-            sibling->right->color = parent->color;
-
-            left_rotate(sibling);
-            right_rotate(parent);
-        }
-        // RL case, s - right, r - left
-        else if (!sibling_is_left_child
-            && sibling->left && sibling->left->color == RED)
-        {
-            sibling->left->color = parent->color;
-
-            right_rotate(sibling);
-            left_rotate(parent);
-        }
         // sibling is black and its both children are black
-        else if ((!sibling->left || sibling->left->color == BLACK)
-            && (!sibling->right || sibling->right->color == BLACK))
+        if (!left_red && !right_red)
         {
             sibling->color = RED;
-            if (parent->color == RED)
-                parent->color = BLACK;
-            else
+            if (parent->color == BLACK)
                 fix_double_black(parent->parent, parent->parent ? parent->parent->left == parent : false);
-            return;
         }
+        else if (sibling_is_left_child)
+        {
+            // LL case, s - left child, r - left or both
+            if (left_red)
+            {
+                sibling->left->color = BLACK;
+                sibling->color = parent->color;
+                
+                right_rotate(parent);
+            }
+            // LR case, s - left, r - right
+            else if (right_red)
+            {
+                sibling->right->color = parent->color;
 
+                left_rotate(sibling);
+                right_rotate(parent);
+            }
+        }
+        else
+        {
+            // RR case, s - rigth child, r - right or both
+            if (right_red)
+            {
+                sibling->right->color = BLACK;
+                sibling->color = parent->color;
+
+                left_rotate(parent);
+            }
+            // RL case, s - right, r - left
+            else if (left_red)
+            {
+                sibling->left->color = parent->color;
+
+                right_rotate(sibling);
+                left_rotate(parent);
+            }
+        }
         parent->color = BLACK;
     }
     // sibling red
@@ -412,98 +406,40 @@ void RBTree<T>::balance(Node<T>*& current_node)
         // LL case
         if (father->left == current_node && grandfather->left == father)
         {
-            ll_case(father, grandfather);
+            father->color = BLACK;
+            grandfather->color = RED;
+
+            right_rotate(grandfather);
         }
         // LR case
         else if (father->right == current_node && grandfather->left == father)
         {
-            grandfather->left = current_node;
+            left_rotate(father);
 
-            father->right = current_node->left;
-            
-            current_node->left = father;
+            current_node->color = BLACK;
+            grandfather->color = RED;
 
-            if (father->right) father->right->parent = father;
-            current_node->parent = grandfather;
-            father->parent = current_node;
-
-            ll_case(current_node, grandfather);
+            right_rotate(grandfather);
         }
         // RR case
         else if (father->right == current_node && grandfather->right == father)
         {
-            rr_case(father, grandfather);
+            father->color = BLACK;
+            grandfather->color = RED;
+
+            left_rotate(grandfather);
         }
         // RL case
         else
         {
-            grandfather->right = current_node;
+            right_rotate(father);
 
-            father->left = current_node->right;
-            
-            current_node->right = father;
+            current_node->color = BLACK;
+            grandfather->color = RED;
 
-            if (father->left) father->left->parent = father;
-            current_node->parent = grandfather;
-            father->parent = current_node;
-
-            rr_case(current_node, grandfather);
+            left_rotate(grandfather);
         }
     }
-}
-
-template<typename T>
-void RBTree<T>::ll_case(Node<T>*& father, Node<T>*& grandfather)
-{
-    grandfather->left = father->right;
-
-    father->right = grandfather;
-
-    father->color = BLACK;
-
-    grandfather->color = RED;
-
-    if (!grandfather->parent)
-    {
-        root = father;
-        father->parent = NULL;
-    }
-    else
-    {
-        (grandfather->parent->left == grandfather) ? grandfather->parent->left = father : grandfather->parent->right = father;
-        father->parent = grandfather->parent;
-    }
-
-    grandfather->parent = father;
-
-    if (grandfather->left) grandfather->left->parent = grandfather;
-}
-
-template<typename T>
-void RBTree<T>::rr_case(Node<T>*& father, Node<T>*& grandfather)
-{
-    grandfather->right = father->left;
-
-    father->left = grandfather;
-
-    father->color = BLACK;
-    grandfather->color = RED;
-
-    if (!grandfather->parent)
-    {
-        root = father;
-        father->parent = NULL;
-    }
-    else
-    {
-        (grandfather->parent->left == grandfather) ? grandfather->parent->left = father : grandfather->parent->right = father;
-        father->parent = grandfather->parent;
-    }
-
-    grandfather->parent = father;
-
-    if (grandfather->right) grandfather->right->parent = grandfather;
-
 }
 
 template<typename T>
