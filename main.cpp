@@ -11,7 +11,7 @@ int main()
     // test_iterator(100000);
 
     // test_rb_tree<int>();
-    
+
     RBTree<int>* tree = new RBTree<int>();
 
     tree->insert(1);
@@ -44,6 +44,8 @@ int main()
         cout << num << " ";
     }
     cout << endl;
+
+    tree->clear();
     
     delete tree;
 

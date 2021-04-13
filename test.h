@@ -34,6 +34,8 @@ bool test_rb_tree()
         result = false;
     }
 
+    tree->clear();
+
     delete tree;
 
     // LR test
@@ -48,6 +50,8 @@ bool test_rb_tree()
         cout << "LR test FAIL\n";
         result = false;
     }
+
+    tree->clear();
 
     delete tree;
 
@@ -64,6 +68,8 @@ bool test_rb_tree()
         result = false;
     }
 
+    tree->clear();
+
     delete tree;
 
     // RL test
@@ -79,6 +85,8 @@ bool test_rb_tree()
         result = false;
     }
 
+    tree->clear();
+
     delete tree;
 
     // combined methods test
@@ -93,6 +101,8 @@ bool test_rb_tree()
         cout << "combined methods test FAIL\n";
         result = false;
     }
+
+    tree->clear();
 
     delete tree;
 
@@ -215,6 +225,8 @@ void test_finding(int n)
 
     cout << "======================\n\n";
 
+    tree->clear();
+
     delete tree;
 }
 
@@ -321,6 +333,8 @@ void test_iterator(int n)
     result ? cout << "Verdict: OK\n" : cout << "Verdict: FAIL\n\n";
 
     cout << "======================\n\n";
+
+    tree->clear();
 
     delete tree;
 }
@@ -494,7 +508,11 @@ void insert_combined_test(RBTree<T>*& tree)
 template<typename T>
 bool insert_random_tests(RBTree<T>*& tree)
 {
-    if (tree) delete tree;
+    if (tree)
+    {
+        tree->clear();
+        delete tree;
+    }
 
     mt19937 generator(time(0));
 
@@ -523,6 +541,8 @@ bool insert_random_tests(RBTree<T>*& tree)
 
         res = is_rb_tree<int>(tree);
 
+        tree->clear();
+
         delete tree;
     }
 
@@ -532,7 +552,11 @@ bool insert_random_tests(RBTree<T>*& tree)
 template<typename T>
 bool small_delete_random_tests(RBTree<T>*& tree)
 {
-    if (tree) delete tree;
+    if (tree)
+    {
+        tree->clear();
+        delete tree;
+    }
 
     mt19937 generator(time(0));
 
@@ -572,6 +596,8 @@ bool small_delete_random_tests(RBTree<T>*& tree)
 
         if (tree->size) res = false;
 
+        tree->clear();
+
         delete tree;
 
         if (!res) break;
@@ -583,7 +609,11 @@ bool small_delete_random_tests(RBTree<T>*& tree)
 template<typename T>
 bool medium_delete_random_tests(RBTree<T>*& tree)
 {
-    if (tree) delete tree;
+    if (tree)
+    {
+        tree->clear();
+        delete tree;
+    }
 
     mt19937 generator(time(0));
 
@@ -623,6 +653,8 @@ bool medium_delete_random_tests(RBTree<T>*& tree)
 
         if (tree->size) res = false;
 
+        tree->clear();
+
         delete tree;
 
         if (!res) break;
@@ -634,7 +666,11 @@ bool medium_delete_random_tests(RBTree<T>*& tree)
 template<typename T>
 bool big_delete_random_tests(RBTree<T>*& tree)
 {
-    if (tree) delete tree;
+    if (tree)
+    {
+        tree->clear();
+        delete tree;
+    }
 
     mt19937 generator(time(0));
 
@@ -674,6 +710,8 @@ bool big_delete_random_tests(RBTree<T>*& tree)
             
             res = is_rb_tree<int>(tree);
         }
+
+        tree->clear();
 
         delete tree;
 

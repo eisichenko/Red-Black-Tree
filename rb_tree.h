@@ -27,6 +27,7 @@ private:
     void remove(Node<T>*&);
     void right_rotate(Node<T>*&);
     void left_rotate(Node<T>*&);
+    void clear(Node<T>*&);
 public:
     Node<T>* root;
     int size;
@@ -173,6 +174,7 @@ public:
     void remove(T);
     bool find(T);
     void print();
+    void clear();
     
     NodeIterator begin()
     {
@@ -559,4 +561,23 @@ void RBTree<T>::right_rotate(Node<T>*&ptr)
 
     left_child->right = ptr;
     ptr->parent = left_child;
+}
+
+template <typename T>
+void RBTree<T>::clear()
+{
+    if (root) clear(root);
+
+    root = NULL;
+}
+
+template <typename T>
+void RBTree<T>::clear(Node<T>*& node)
+{
+    if (!node) return;
+
+    clear(node->left);
+    clear(node->right);
+
+    delete node;
 }
